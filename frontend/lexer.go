@@ -1,118 +1,64 @@
 package frontend
 
-import "fmt"
-
-type tokenValue string
-
-const (
-	EN_MODULE        tokenValue = "module"
-	JP_MODULE        tokenValue = "モジュール"
-	EN_IMPORT        tokenValue = "import"
-	JP_IMPORT        tokenValue = "インポート"
-	HW_EQUALS        tokenValue = "="
-	FW_EQUALS        tokenValue = "＝"
-	HW_OPEN_PAREN    tokenValue = "("
-	FW_OPEN_PAREN    tokenValue = "（"
-	HW_CLOSE_PAREN   tokenValue = ")"
-	FW_CLOSE_PAREN   tokenValue = "）"
-	HW_OPEN_BRACKET  tokenValue = "["
-	FW_OPEN_BRACKET  tokenValue = "【"
-	HW_CLOSE_BRACKET tokenValue = "]"
-	FW_CLOSE_BRACKET tokenValue = "】"
-	HW_OPEN_BRACE    tokenValue = "{"
-	FW_OPEN_BRACE    tokenValue = "｛"
-	HW_CLOSE_BRACE   tokenValue = "}"
-	FW_CLOSE_BRACE   tokenValue = "｝"
-	HW_COLON         tokenValue = ":"
-	FW_COLON         tokenValue = "："
-	HW_PERIOD        tokenValue = "."
-	FW_PERIOD        tokenValue = "。"
-	HW_SEMICOLON     tokenValue = ";"
-	FW_SEMICOLON     tokenValue = "；"
-	HW_COMMA         tokenValue = ","
-	FW_COMMA_1       tokenValue = "，"
-	FW_COMMA_2       tokenValue = "、"
-	HW_QUESTION      tokenValue = "?"
-	FW_QUESTION      tokenValue = "？"
-	HW_BANG          tokenValue = "!"
-	FW_BANG          tokenValue = "！"
-	EN_COMMENT       tokenValue = "#"
-	JP_COMMENT       tokenValue = "＃"
-	EN_STRING        tokenValue = "'"
-	JP_STRING        tokenValue = "”"
-	EN_FUNC          tokenValue = "func"
-	JP_FUNC          tokenValue = "関数"
-	EN_WHILE         tokenValue = "while"
-	JP_WHILE         tokenValue = "繰り返す"
-	EN_LET           tokenValue = "let"
-	JP_LET           tokenValue = "宣言"
-	EN_CONST         tokenValue = "const"
-	JP_CONST         tokenValue = "定数"
-	EN_NIL           tokenValue = "nil"
-	JP_NIL           tokenValue = "無"
-	EN_TRUE          tokenValue = "true"
-	JP_TRUE          tokenValue = "本当"
-	EN_FALSE         tokenValue = "false"
-	JP_FALSE         tokenValue = "嘘"
-	EN_IF            tokenValue = "if"
-	JP_IF            tokenValue = "もし"
-	EOF              tokenValue = "EOF"
+import (
+	"fmt"
+	"regexp"
 )
 
-type tokenKind uint
+type tokenKind string
 
 const (
-	ModuleTokenKind       tokenKind = 1
-	ImportTokenKind       tokenKind = 2
-	IntTokenKind          tokenKind = 3
-	FloatTokenKind        tokenKind = 4
-	BooleanTokenKind      tokenKind = 5
-	StringTokenKind       tokenKind = 6
-	NilTokenKind          tokenKind = 7
-	IdentifierTokenKind   tokenKind = 8
-	EqualsTokenKind       tokenKind = 9
-	OpenParenTokenKind    tokenKind = 10
-	CloseParenTokenKind   tokenKind = 11
-	BinOpTokenKind        tokenKind = 12
-	OpenBracketTokenKind  tokenKind = 13
-	CloseBracketTokenKind tokenKind = 14
-	OpenBraceTokenKind    tokenKind = 15
-	CloseBraceTokenKind   tokenKind = 16
-	ColonTokenKind        tokenKind = 17
-	PeriodTokenKind       tokenKind = 18
-	SemicolonTokenKind    tokenKind = 19
-	CommaTokenKind        tokenKind = 20
-	QuestionTokenKind     tokenKind = 21
-	BangTokenKind         tokenKind = 22
-	LetTokenKind          tokenKind = 23
-	ConstTokenKind        tokenKind = 24
-	FuncTokenKind         tokenKind = 25
-	IfTokenKind           tokenKind = 26
-	WhileTokenKind        tokenKind = 27
-	EOFTokenKind          tokenKind = 28
+	ModuleTokenKind       tokenKind = "Module"
+	ImportTokenKind       tokenKind = "Import"
+	IntTokenKind          tokenKind = "Int"
+	FloatTokenKind        tokenKind = "Float"
+	BooleanTokenKind      tokenKind = "Boolean"
+	StringTokenKind       tokenKind = "String"
+	NilTokenKind          tokenKind = "Nil"
+	IdentifierTokenKind   tokenKind = "Identifier"
+	EqualsTokenKind       tokenKind = "Equals"
+	OpenParenTokenKind    tokenKind = "OpenParen"
+	CloseParenTokenKind   tokenKind = "CloseParen"
+	BinOpTokenKind        tokenKind = "BinOp"
+	OpenBracketTokenKind  tokenKind = "OpenBracket"
+	CloseBracketTokenKind tokenKind = "CloseBracket"
+	OpenBraceTokenKind    tokenKind = "OpenBrace"
+	CloseBraceTokenKind   tokenKind = "CloseBrace"
+	ColonTokenKind        tokenKind = "Colon"
+	PeriodTokenKind       tokenKind = "Period"
+	SemicolonTokenKind    tokenKind = "Semicolon"
+	CommaTokenKind        tokenKind = "Comma"
+	QuestionTokenKind     tokenKind = "Question"
+	BangTokenKind         tokenKind = "Bang"
+	LetTokenKind          tokenKind = "Let"
+	ConstTokenKind        tokenKind = "Const"
+	FuncTokenKind         tokenKind = "Func"
+	IfTokenKind           tokenKind = "If"
+	WhileTokenKind        tokenKind = "While"
+	EOFTokenKind          tokenKind = "EOF"
 )
 
-var reserved = map[tokenValue]tokenKind{
-	EN_MODULE: ModuleTokenKind,
-	JP_MODULE: ModuleTokenKind,
-	EN_IMPORT: ImportTokenKind,
-	JP_IMPORT: ImportTokenKind,
-	EN_LET:    LetTokenKind,
-	JP_LET:    LetTokenKind,
-	EN_CONST:  ConstTokenKind,
-	JP_CONST:  ConstTokenKind,
-	EN_NIL:    NilTokenKind,
-	JP_NIL:    NilTokenKind,
-	EN_TRUE:   BooleanTokenKind,
-	JP_TRUE:   BooleanTokenKind,
-	EN_FALSE:  BooleanTokenKind,
-	JP_FALSE:  BooleanTokenKind,
-	EN_IF:     IfTokenKind,
-	JP_IF:     IfTokenKind,
-	EN_WHILE:  WhileTokenKind,
-	JP_WHILE:  WhileTokenKind,
-	EN_FUNC:   FuncTokenKind,
-	JP_FUNC:   FuncTokenKind,
+var reserved = map[string]tokenKind{
+	"module": ModuleTokenKind,
+	"モジュール":  ModuleTokenKind,
+	"import": ImportTokenKind,
+	"インポート":  ImportTokenKind,
+	"let":    LetTokenKind,
+	"宣言":     LetTokenKind,
+	"const":  ConstTokenKind,
+	"定数":     ConstTokenKind,
+	"nil":    NilTokenKind,
+	"無":      NilTokenKind,
+	"true":   BooleanTokenKind,
+	"本当":     BooleanTokenKind,
+	"false":  BooleanTokenKind,
+	"嘘":      BooleanTokenKind,
+	"if":     IfTokenKind,
+	"もし":     IfTokenKind,
+	"while":  WhileTokenKind,
+	"繰り返す":   WhileTokenKind,
+	"func":   FuncTokenKind,
+	"関数":     FuncTokenKind,
 }
 
 type token struct {
@@ -140,6 +86,20 @@ func MakeGomiLexer(src []rune) gomiLexer {
 
 func skippable(ch rune) bool {
 	return ch == ' ' || ch == '　' || ch == '\n' || ch == '\r' || ch == '\t' || ch == '#' || ch == '＃'
+}
+
+func isDigit(ch rune) bool {
+	sampleRegexp := regexp.MustCompile(`\d|[０-９]`)
+	return sampleRegexp.MatchString(string(ch))
+}
+
+func identifierBeginAllowed(ch rune) bool {
+	sampleRegexp := regexp.MustCompile(`[a-zA-Z\x{3041}-\x{3096}\x{30a1}-\x{30f6}\x{4e00}-\x{9faf}\x{30fc}]`)
+	return sampleRegexp.MatchString(string(ch))
+}
+
+func identifierAllowed(ch rune) bool {
+	return identifierBeginAllowed(ch) || isDigit(ch) || ch == '_' || ch == '＿'
 }
 
 func (lexer *gomiLexer) makeToken(value string, kind tokenKind) (token, error) {
@@ -173,7 +133,7 @@ func (lexer *gomiLexer) eatSkippables() {
 	}
 }
 
-func (lexer *gomiLexer) readSingleCharToken() (token, error) {
+func (lexer *gomiLexer) scanSingleCharToken() (token, error) {
 	if lexer.src[lexer.cursor] == '(' || lexer.src[lexer.cursor] == '（' {
 		return lexer.makeToken(string(lexer.src[lexer.cursor]), OpenParenTokenKind)
 	}
@@ -210,43 +170,208 @@ func (lexer *gomiLexer) readSingleCharToken() (token, error) {
 	return token{}, fmt.Errorf("No single char token found")
 }
 
+func (lexer *gomiLexer) scanArithBinOpToken() (token, error) {
+	ch := lexer.at()
+	if ch == '+' || ch == '＋' {
+		return lexer.makeToken(string(ch), BinOpTokenKind)
+	}
+	if ch == '-' {
+		return lexer.makeToken(string(ch), BinOpTokenKind)
+	}
+	if ch == '*' || ch == '＊' {
+		return lexer.makeToken(string(ch), BinOpTokenKind)
+	}
+	if ch == '/' || ch == '／' {
+		return lexer.makeToken(string(ch), BinOpTokenKind)
+	}
+	if ch == '%' || ch == '％' {
+		return lexer.makeToken(string(ch), BinOpTokenKind)
+	}
+	if ch == '^' || ch == '＾' {
+		return lexer.makeToken(string(ch), BinOpTokenKind)
+	}
+	return token{}, fmt.Errorf("No arithmetic binop token")
+}
+
+func (lexer *gomiLexer) scanTwoCharCandidateToken(c1 rune, c2 rune, t1 tokenKind, t2 tokenKind) (token, error) {
+	value := string(lexer.at())
+	if lexer.at() == c1 {
+		lexer.cursor++
+		if lexer.at() == c2 {
+			return lexer.makeToken(value+string(lexer.at()), t1)
+		}
+		lexer.cursor--
+		return lexer.makeToken(value, t2)
+	}
+	return token{}, fmt.Errorf("Could not scan two char token")
+}
+
+func (lexer *gomiLexer) scanBangEqualityToken() (token, error) {
+	if tok, err := lexer.scanTwoCharCandidateToken('!', '=', BinOpTokenKind, BangTokenKind); err == nil {
+		return tok, nil
+	}
+	if tok, err := lexer.scanTwoCharCandidateToken('！', '＝', BinOpTokenKind, BangTokenKind); err == nil {
+		return tok, nil
+	}
+	return token{}, fmt.Errorf("No bang equality token")
+}
+
+func (lexer *gomiLexer) scanComparisonToken() (token, error) {
+	if tok, err := lexer.scanTwoCharCandidateToken('<', '=', BinOpTokenKind, BinOpTokenKind); err == nil {
+		return tok, nil
+	}
+	if tok, err := lexer.scanTwoCharCandidateToken('＜', '＝', BinOpTokenKind, BinOpTokenKind); err == nil {
+		return tok, nil
+	}
+	if tok, err := lexer.scanTwoCharCandidateToken('>', '=', BinOpTokenKind, BinOpTokenKind); err == nil {
+		return tok, nil
+	}
+	if tok, err := lexer.scanTwoCharCandidateToken('＞', '＝', BinOpTokenKind, BinOpTokenKind); err == nil {
+		return tok, nil
+	}
+	return token{}, fmt.Errorf("No comparison token")
+}
+
+func (lexer *gomiLexer) scanEqualityToken() (token, error) {
+	if tok, err := lexer.scanTwoCharCandidateToken('=', '=', BinOpTokenKind, EqualsTokenKind); err == nil {
+		return tok, nil
+	}
+	if tok, err := lexer.scanTwoCharCandidateToken('＝', '＝', BinOpTokenKind, EqualsTokenKind); err == nil {
+		return tok, nil
+	}
+	return token{}, fmt.Errorf("No equality token")
+}
+
+func (lexer *gomiLexer) scanStringToken() (token, error) {
+	if lexer.at() == '\'' || lexer.at() == '”' {
+		value := ""
+		lexer.cursor++
+		for lexer.at() != '\'' && lexer.at() != '”' {
+			if lexer.at() == '\\' {
+				lexer.cursor++
+			}
+			if lexer.at() == '\n' || lexer.cursor >= len(lexer.src) {
+				return token{}, fmt.Errorf("Strings must be closed and expressed on one line.")
+			}
+			value += string(lexer.at())
+			lexer.cursor++
+		}
+		return lexer.makeToken(value, StringTokenKind)
+	}
+	return token{}, fmt.Errorf("No string token")
+}
+
+func (lexer *gomiLexer) scanLogicalOpToken() (token, error) {
+	if lexer.at() == '|' {
+		lexer.cursor++
+		if lexer.at() == '|' {
+			return lexer.makeToken("||", BinOpTokenKind)
+		}
+	} else if lexer.at() == '｜' {
+		lexer.cursor++
+		if lexer.at() == '｜' {
+			return lexer.makeToken("｜｜", BinOpTokenKind)
+		}
+	} else if lexer.at() == '&' {
+		lexer.cursor++
+		if lexer.at() == '&' {
+			return lexer.makeToken("&&", BinOpTokenKind)
+		}
+	} else if lexer.at() == '＆' {
+		lexer.cursor++
+		if lexer.at() == '＆' {
+			return lexer.makeToken("＆＆", BinOpTokenKind)
+		}
+	}
+	return token{}, fmt.Errorf("No logical binop token")
+}
+
+func (lexer *gomiLexer) scanNumericToken() (token, error) {
+	if isDigit(lexer.at()) {
+		isFloat := false
+		value := string(lexer.at())
+		lexer.cursor++
+		for lexer.cursor < len(lexer.src) && (isDigit(lexer.at()) || lexer.at() == '.' || lexer.at() == '．') {
+			if lexer.at() == '.' || lexer.at() == '．' {
+				isFloat = true
+				value += string(lexer.at())
+				lexer.cursor++
+				if !isDigit(lexer.at()) {
+					return token{}, fmt.Errorf("Unexpected token while parsing float")
+				}
+				for lexer.cursor < len(lexer.src) && isDigit(lexer.at()) {
+					value += string(lexer.at())
+					lexer.cursor++
+				}
+			} else {
+				value += string(lexer.at())
+				lexer.cursor++
+			}
+		}
+		lexer.cursor--
+		if isFloat {
+			return lexer.makeToken(value, FloatTokenKind)
+		}
+		return lexer.makeToken(value, IntTokenKind)
+	}
+	return token{}, fmt.Errorf("No numeric token")
+}
+
+func (lexer *gomiLexer) scanIdentifierToken() (token, error) {
+	if identifierBeginAllowed(lexer.at()) {
+		value := string(lexer.at())
+		lexer.cursor++
+		for lexer.cursor < len(lexer.src) && identifierAllowed(lexer.at()) {
+			value += string(lexer.at())
+			lexer.cursor++
+		}
+		lexer.cursor--
+		if kind, has := reserved[value]; has {
+			return lexer.makeToken(value, kind)
+		}
+		return lexer.makeToken(value, IdentifierTokenKind)
+	}
+	return token{}, fmt.Errorf("No identifier token")
+}
+
+func (lexer *gomiLexer) at() rune {
+	return lexer.src[lexer.cursor]
+}
+
 func (lexer *gomiLexer) ReadToken() (token, error) {
 	for {
 		lexer.eatSkippables()
 		if lexer.cursor >= len(lexer.src) {
 			return lexer.makeToken("EOF", EOFTokenKind)
 		}
-		if tok, err := lexer.readSingleCharToken(); err == nil {
+		if tok, err := lexer.scanSingleCharToken(); err == nil {
 			return tok, nil
 		}
-		// tok, err = lexer.readBangEqualityToken()
-		// if err == nil {
-		// 	return tok, nil
-		// }
-		// tok, err = lexer.readComparisonToken()
-		// if err == nil {
-		// 	return tok, nil
-		// }
-		// tok, err = lexer.readEquality()
-		// if err == nil {
-		// 	return tok, nil
-		// }
-		// tok, err = lexer.readStringToken()
-		// if err == nil {
-		// 	return tok, nil
-		// }
-		// tok, err = lexer.readBinOpToken()
-		// if err == nil {
-		// 	return tok, nil
-		// }
-		// tok, err = lexer.readNumericToken()
-		// if err == nil {
-		// 	return tok, nil
-		// }
-		// tok, err = lexer.readIdentiferToken()
-		// if err == nil {
-		// 	return tok, nil
-		// }
+		if tok, err := lexer.scanArithBinOpToken(); err == nil {
+			return tok, nil
+		}
+		if tok, err := lexer.scanBangEqualityToken(); err == nil {
+			return tok, nil
+		}
+		if tok, err := lexer.scanComparisonToken(); err == nil {
+			return tok, nil
+		}
+		if tok, err := lexer.scanEqualityToken(); err == nil {
+			return tok, nil
+		}
+		if tok, err := lexer.scanStringToken(); err == nil {
+			return tok, nil
+		}
+		if tok, err := lexer.scanLogicalOpToken(); err == nil {
+			return tok, nil
+		}
+		if tok, err := lexer.scanNumericToken(); err == nil {
+			return tok, nil
+		}
+		if tok, err := lexer.scanIdentifierToken(); err == nil {
+			return tok, nil
+		}
+
 		return token{}, fmt.Errorf(`
 			Lexer Error!
 			Unrecognized token: '%v'
