@@ -216,8 +216,7 @@ func (lexer *gomiLexer) ReadToken() (token, error) {
 		if lexer.cursor >= len(lexer.src) {
 			return lexer.makeToken("EOF", EOFTokenKind)
 		}
-		tok, err := lexer.readSingleCharToken()
-		if err == nil {
+		if tok, err := lexer.readSingleCharToken(); err == nil {
 			return tok, nil
 		}
 		// tok, err = lexer.readBangEqualityToken()
