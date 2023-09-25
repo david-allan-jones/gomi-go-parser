@@ -27,7 +27,7 @@ func main() {
 		== ＝＝
 		= ＝
 		'abc' ”あいう”
-		'a\aa'
+		'a\\a'
 		|| ｜｜
 		&& ＆＆
 		0 ０
@@ -49,11 +49,7 @@ func main() {
 	`
 
 	lexer := frontend.MakeGomiLexer([]rune(src))
-	for token, err := lexer.ReadToken(); token.Kind != frontend.EOFTokenKind; token, err = lexer.ReadToken() {
-		if err != nil {
-			fmt.Println(err)
-			break
-		}
+	for token, err := lexer.ReadToken(); err == nil; token, err = lexer.ReadToken() {
 		fmt.Println(token)
 	}
 }

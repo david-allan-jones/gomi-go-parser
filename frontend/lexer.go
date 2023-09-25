@@ -79,8 +79,8 @@ func MakeGomiLexer(src []rune) gomiLexer {
 	return gomiLexer{
 		src:    src,
 		cursor: 0,
-		line:   0,
-		column: 0,
+		line:   1,
+		column: 1,
 	}
 }
 
@@ -109,10 +109,8 @@ func (lexer *gomiLexer) makeToken(value string, kind tokenKind) (token, error) {
 		Line:   lexer.line,
 		Column: lexer.column,
 	}
-	if kind != EOFTokenKind {
-		lexer.cursor++
-		lexer.column += len([]rune(value))
-	}
+	lexer.cursor++
+	lexer.column += len([]rune(value))
 	return tok, nil
 }
 
@@ -197,7 +195,7 @@ func (lexer *gomiLexer) scanTwoCharCandidateToken(c1 rune, c2 rune, t1 tokenKind
 	value := string(lexer.at())
 	if lexer.at() == c1 {
 		lexer.cursor++
-		if lexer.at() == c2 {
+		if lexer.cursor < len(lexer.src) && lexer.at() == c2 {
 			return lexer.makeToken(value+string(lexer.at()), t1)
 		}
 		lexer.cursor--
@@ -342,7 +340,10 @@ func (lexer *gomiLexer) ReadToken() (token, error) {
 	unrecognizedHit := false
 	for !unrecognizedHit {
 		lexer.eatSkippables()
-		if lexer.cursor >= len(lexer.src) {
+		if lexer.cursor > len(lexer.src) {
+			return token{}, fmt.Errorf("processed entire input")
+		}
+		if lexer.cursor == len(lexer.src) {
 			return lexer.makeToken("EOF", EOFTokenKind)
 		}
 		if tok, err := lexer.scanSingleCharToken(); err == nil {

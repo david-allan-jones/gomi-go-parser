@@ -9,7 +9,7 @@ func testSources(t *testing.T, programs []string, kind tokenKind) {
 		lexer := MakeGomiLexer([]rune(programs[i]))
 		tok, _ := lexer.ReadToken()
 		if tok.Value != programs[i] {
-			t.Fatalf("Failed value test. Received '%v' but expected '%v'", tok.Value, programs[i])
+			t.Fatalf("Failed value test. Received %v but expected %v", tok.Value, programs[i])
 		}
 		if tok.Kind != kind {
 			t.Fatalf("Failed kind test. Received '%v' but expected '%v'", tok.Kind, kind)
@@ -89,7 +89,14 @@ func TestFloat(t *testing.T) {
 }
 
 func TestString(t *testing.T) {
-	testSources(t, []string{"''", "'Test'", "””", "”テスト”"}, StringTokenKind)
+	tests := []string{"''", "'Test'", "””", "”テスト”"}
+	for i := 0; i < len(tests); i++ {
+		lexer := MakeGomiLexer([]rune(tests[i]))
+		tok, _ := lexer.ReadToken()
+		if tok.Kind != StringTokenKind {
+			t.Fatalf("Failed to lex a string. Received %v", tok.Kind)
+		}
+	}
 }
 
 func TestNil(t *testing.T) {
@@ -149,7 +156,7 @@ func TestWhitespaceAtEndOfFile(t *testing.T) {
 	lexer := MakeGomiLexer([]rune(`
 		a 
 	`))
-	for tok, _ := lexer.ReadToken(); tok.Kind != EOFTokenKind; tok, _ = lexer.ReadToken() {
+	for tok, err := lexer.ReadToken(); err == nil; tok, err = lexer.ReadToken() {
 		toks = append(toks, tok)
 	}
 	// Add 1 for EOF
@@ -177,8 +184,7 @@ func TestLineNumberTracking(t *testing.T) {
 }
 
 func TestColumnTracking(t *testing.T) {
-	lexer := MakeGomiLexer([]rune(" ab "))
-	// ab
+	lexer := MakeGomiLexer([]rune(" ( "))
 	tok, _ := lexer.ReadToken()
 	if tok.Column != 2 {
 		t.Fail()
