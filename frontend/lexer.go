@@ -144,13 +144,13 @@ func (lexer *gomiLexer) scanSingleCharToken() (token, error) {
 		return lexer.makeToken(string(lexer.src[lexer.cursor]), OpenBracketTokenKind)
 	}
 	if lexer.src[lexer.cursor] == ']' || lexer.src[lexer.cursor] == '】' {
-		return lexer.makeToken(string(lexer.src[lexer.cursor]), OpenBracketTokenKind)
+		return lexer.makeToken(string(lexer.src[lexer.cursor]), CloseBracketTokenKind)
 	}
 	if lexer.src[lexer.cursor] == '{' || lexer.src[lexer.cursor] == '｛' {
 		return lexer.makeToken(string(lexer.src[lexer.cursor]), OpenBraceTokenKind)
 	}
 	if lexer.src[lexer.cursor] == '}' || lexer.src[lexer.cursor] == '｝' {
-		return lexer.makeToken(string(lexer.src[lexer.cursor]), OpenBraceTokenKind)
+		return lexer.makeToken(string(lexer.src[lexer.cursor]), CloseBraceTokenKind)
 	}
 	if lexer.src[lexer.cursor] == '.' || lexer.src[lexer.cursor] == '。' {
 		return lexer.makeToken(string(lexer.src[lexer.cursor]), PeriodTokenKind)
