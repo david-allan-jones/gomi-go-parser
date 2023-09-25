@@ -48,7 +48,7 @@ func main() {
 		^ ＾
 	`
 
-	lexer := frontend.MakeGomiLexer([]rune(src))
+	lexer := frontend.MakeGomiLexer(src)
 	for token, err := lexer.ReadToken(); err == nil; token, err = lexer.ReadToken() {
 		fmt.Println(token)
 	}

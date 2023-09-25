@@ -75,9 +75,9 @@ type gomiLexer struct {
 	column int
 }
 
-func MakeGomiLexer(src []rune) gomiLexer {
+func MakeGomiLexer(src string) gomiLexer {
 	return gomiLexer{
-		src:    src,
+		src:    []rune(src),
 		cursor: 0,
 		line:   1,
 		column: 1,

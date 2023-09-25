@@ -6,7 +6,7 @@ import (
 
 func testSources(t *testing.T, programs []string, kind tokenKind) {
 	for i := 0; i < len(programs); i++ {
-		lexer := MakeGomiLexer([]rune(programs[i]))
+		lexer := MakeGomiLexer(programs[i])
 		tok, _ := lexer.ReadToken()
 		if tok.Value != programs[i] {
 			t.Fatalf("Failed value test. Received %v but expected %v", tok.Value, programs[i])
@@ -18,7 +18,7 @@ func testSources(t *testing.T, programs []string, kind tokenKind) {
 }
 
 func TestEmptyString(t *testing.T) {
-	lexer := MakeGomiLexer([]rune(""))
+	lexer := MakeGomiLexer("")
 	tok, _ := lexer.ReadToken()
 	if tok.Kind != EOFTokenKind {
 		t.Fail()
@@ -26,10 +26,10 @@ func TestEmptyString(t *testing.T) {
 }
 
 func TestLineComment(t *testing.T) {
-	lexer := MakeGomiLexer([]rune(`
+	lexer := MakeGomiLexer(`
 		# This is a comment
 		1	
-	`))
+	`)
 	tok, _ := lexer.ReadToken()
 	if tok.Kind != IntTokenKind || tok.Value != "1" {
 		t.Fail()
@@ -91,7 +91,7 @@ func TestFloat(t *testing.T) {
 func TestString(t *testing.T) {
 	tests := []string{"''", "'Test'", "””", "”テスト”"}
 	for i := 0; i < len(tests); i++ {
-		lexer := MakeGomiLexer([]rune(tests[i]))
+		lexer := MakeGomiLexer(tests[i])
 		tok, _ := lexer.ReadToken()
 		if tok.Kind != StringTokenKind {
 			t.Fatalf("Failed to lex a string. Received %v", tok.Kind)
@@ -153,9 +153,9 @@ func TestMultipleCharBinOps(t *testing.T) {
 
 func TestWhitespaceAtEndOfFile(t *testing.T) {
 	var toks []token
-	lexer := MakeGomiLexer([]rune(`
+	lexer := MakeGomiLexer(`
 		a 
-	`))
+	`)
 	for tok, err := lexer.ReadToken(); err == nil; tok, err = lexer.ReadToken() {
 		toks = append(toks, tok)
 	}
@@ -166,7 +166,7 @@ func TestWhitespaceAtEndOfFile(t *testing.T) {
 }
 
 func TestUnrecognizedChars(t *testing.T) {
-	lexer := MakeGomiLexer([]rune("$"))
+	lexer := MakeGomiLexer("$")
 	tok, err := lexer.ReadToken()
 	if err == nil {
 		t.Fatalf("Expected $ to be unexpected but it was not. Token: %v", tok)
@@ -174,9 +174,9 @@ func TestUnrecognizedChars(t *testing.T) {
 }
 
 func TestLineNumberTracking(t *testing.T) {
-	lexer := MakeGomiLexer([]rune(`
+	lexer := MakeGomiLexer(`
 		a	
-	`))
+	`)
 	tok, _ := lexer.ReadToken()
 	if tok.Line != 2 {
 		t.Fail()
@@ -184,7 +184,7 @@ func TestLineNumberTracking(t *testing.T) {
 }
 
 func TestColumnTracking(t *testing.T) {
-	lexer := MakeGomiLexer([]rune(" ( "))
+	lexer := MakeGomiLexer(" ( ")
 	tok, _ := lexer.ReadToken()
 	if tok.Column != 2 {
 		t.Fail()
