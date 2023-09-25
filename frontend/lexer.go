@@ -167,7 +167,7 @@ func (lexer *gomiLexer) scanSingleCharToken() (token, error) {
 	if lexer.src[lexer.cursor] == '?' || lexer.src[lexer.cursor] == '？' {
 		return lexer.makeToken(string(lexer.src[lexer.cursor]), QuestionTokenKind)
 	}
-	return token{}, fmt.Errorf("No single char token found")
+	return token{}, fmt.Errorf("no single char token found")
 }
 
 func (lexer *gomiLexer) scanArithBinOpToken() (token, error) {
@@ -190,7 +190,7 @@ func (lexer *gomiLexer) scanArithBinOpToken() (token, error) {
 	if ch == '^' || ch == '＾' {
 		return lexer.makeToken(string(ch), BinOpTokenKind)
 	}
-	return token{}, fmt.Errorf("No arithmetic binop token")
+	return token{}, fmt.Errorf("no arithmetic binop token")
 }
 
 func (lexer *gomiLexer) scanTwoCharCandidateToken(c1 rune, c2 rune, t1 tokenKind, t2 tokenKind) (token, error) {
@@ -203,7 +203,7 @@ func (lexer *gomiLexer) scanTwoCharCandidateToken(c1 rune, c2 rune, t1 tokenKind
 		lexer.cursor--
 		return lexer.makeToken(value, t2)
 	}
-	return token{}, fmt.Errorf("Could not scan two char token")
+	return token{}, fmt.Errorf("could not scan two char token")
 }
 
 func (lexer *gomiLexer) scanBangEqualityToken() (token, error) {
@@ -213,7 +213,7 @@ func (lexer *gomiLexer) scanBangEqualityToken() (token, error) {
 	if tok, err := lexer.scanTwoCharCandidateToken('！', '＝', BinOpTokenKind, BangTokenKind); err == nil {
 		return tok, nil
 	}
-	return token{}, fmt.Errorf("No bang equality token")
+	return token{}, fmt.Errorf("no bang equality token")
 }
 
 func (lexer *gomiLexer) scanComparisonToken() (token, error) {
@@ -229,7 +229,7 @@ func (lexer *gomiLexer) scanComparisonToken() (token, error) {
 	if tok, err := lexer.scanTwoCharCandidateToken('＞', '＝', BinOpTokenKind, BinOpTokenKind); err == nil {
 		return tok, nil
 	}
-	return token{}, fmt.Errorf("No comparison token")
+	return token{}, fmt.Errorf("no comparison token")
 }
 
 func (lexer *gomiLexer) scanEqualityToken() (token, error) {
@@ -239,7 +239,7 @@ func (lexer *gomiLexer) scanEqualityToken() (token, error) {
 	if tok, err := lexer.scanTwoCharCandidateToken('＝', '＝', BinOpTokenKind, EqualsTokenKind); err == nil {
 		return tok, nil
 	}
-	return token{}, fmt.Errorf("No equality token")
+	return token{}, fmt.Errorf("no equality token")
 }
 
 func (lexer *gomiLexer) scanStringToken() (token, error) {
@@ -251,14 +251,14 @@ func (lexer *gomiLexer) scanStringToken() (token, error) {
 				lexer.cursor++
 			}
 			if lexer.at() == '\n' || lexer.cursor >= len(lexer.src) {
-				return token{}, fmt.Errorf("Strings must be closed and expressed on one line.")
+				return token{}, fmt.Errorf("strings must be closed and expressed on one line")
 			}
 			value += string(lexer.at())
 			lexer.cursor++
 		}
 		return lexer.makeToken(value, StringTokenKind)
 	}
-	return token{}, fmt.Errorf("No string token")
+	return token{}, fmt.Errorf("no string token")
 }
 
 func (lexer *gomiLexer) scanLogicalOpToken() (token, error) {
@@ -283,7 +283,7 @@ func (lexer *gomiLexer) scanLogicalOpToken() (token, error) {
 			return lexer.makeToken("＆＆", BinOpTokenKind)
 		}
 	}
-	return token{}, fmt.Errorf("No logical binop token")
+	return token{}, fmt.Errorf("no logical binop token")
 }
 
 func (lexer *gomiLexer) scanNumericToken() (token, error) {
@@ -297,7 +297,7 @@ func (lexer *gomiLexer) scanNumericToken() (token, error) {
 				value += string(lexer.at())
 				lexer.cursor++
 				if !isDigit(lexer.at()) {
-					return token{}, fmt.Errorf("Unexpected token while parsing float")
+					return token{}, fmt.Errorf("unexpected token while parsing float")
 				}
 				for lexer.cursor < len(lexer.src) && isDigit(lexer.at()) {
 					value += string(lexer.at())
@@ -314,7 +314,7 @@ func (lexer *gomiLexer) scanNumericToken() (token, error) {
 		}
 		return lexer.makeToken(value, IntTokenKind)
 	}
-	return token{}, fmt.Errorf("No numeric token")
+	return token{}, fmt.Errorf("no numeric token")
 }
 
 func (lexer *gomiLexer) scanIdentifierToken() (token, error) {
@@ -331,7 +331,7 @@ func (lexer *gomiLexer) scanIdentifierToken() (token, error) {
 		}
 		return lexer.makeToken(value, IdentifierTokenKind)
 	}
-	return token{}, fmt.Errorf("No identifier token")
+	return token{}, fmt.Errorf("no identifier token")
 }
 
 func (lexer *gomiLexer) at() rune {
@@ -339,7 +339,8 @@ func (lexer *gomiLexer) at() rune {
 }
 
 func (lexer *gomiLexer) ReadToken() (token, error) {
-	for {
+	unrecognizedHit := false
+	for !unrecognizedHit {
 		lexer.eatSkippables()
 		if lexer.cursor >= len(lexer.src) {
 			return lexer.makeToken("EOF", EOFTokenKind)
@@ -371,12 +372,12 @@ func (lexer *gomiLexer) ReadToken() (token, error) {
 		if tok, err := lexer.scanIdentifierToken(); err == nil {
 			return tok, nil
 		}
-
-		return token{}, fmt.Errorf(`
-			Lexer Error!
-			Unrecognized token: '%v'
-			Line: %v
-			Column: %v
-		`, string(lexer.src[lexer.cursor]), lexer.line, lexer.column)
+		unrecognizedHit = true
 	}
+	return token{}, fmt.Errorf(`
+		Lexer Error!
+		Unrecognized token: '%v'
+		Line: %v
+		Column: %v
+	`, string(lexer.src[lexer.cursor]), lexer.line, lexer.column)
 }
