@@ -13,10 +13,10 @@ func StartLexerRepl() {
 		for {
 			tok, err := lexer.ReadToken()
 			if err != nil {
-				color.Red(err.Error())
+				color.HiRed(err.Error())
 				break
 			}
-			color.Yellow(fmt.Sprintf("{ %v, \"%v\", %v:%v }", tok.Kind, tok.Value, tok.Line, tok.Column))
+			color.HiYellow(fmt.Sprintf("{ %v, \"%v\", %v:%v }", tok.Kind, tok.Value, tok.Line, tok.Column))
 			if tok.Kind == frontend.EOFTokenKind {
 				break
 			}

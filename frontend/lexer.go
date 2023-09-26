@@ -3,6 +3,8 @@ package frontend
 import (
 	"fmt"
 	"regexp"
+
+	"github.com/david-allan-jones/gomi-go-parser/frontend/errors"
 )
 
 type tokenKind string
@@ -102,7 +104,7 @@ func identifierAllowed(ch rune) bool {
 	return identifierBeginAllowed(ch) || isDigit(ch) || ch == '_' || ch == '＿'
 }
 
-func (lexer *gomiLexer) makeToken(value string, kind tokenKind) (token, error) {
+func (lexer *gomiLexer) makeToken(value string, kind tokenKind) token {
 	tok := token{
 		Value:  value,
 		Kind:   kind,
@@ -111,7 +113,7 @@ func (lexer *gomiLexer) makeToken(value string, kind tokenKind) (token, error) {
 	}
 	lexer.cursor++
 	lexer.column += len([]rune(value))
-	return tok, nil
+	return tok
 }
 
 func (lexer *gomiLexer) eatSkippables() {
@@ -133,37 +135,37 @@ func (lexer *gomiLexer) eatSkippables() {
 
 func (lexer *gomiLexer) scanSingleCharToken() (token, error) {
 	if lexer.src[lexer.cursor] == '(' || lexer.src[lexer.cursor] == '（' {
-		return lexer.makeToken(string(lexer.src[lexer.cursor]), OpenParenTokenKind)
+		return lexer.makeToken(string(lexer.src[lexer.cursor]), OpenParenTokenKind), nil
 	}
 	if lexer.src[lexer.cursor] == ')' || lexer.src[lexer.cursor] == '）' {
-		return lexer.makeToken(string(lexer.src[lexer.cursor]), CloseParenTokenKind)
+		return lexer.makeToken(string(lexer.src[lexer.cursor]), CloseParenTokenKind), nil
 	}
 	if lexer.src[lexer.cursor] == '[' || lexer.src[lexer.cursor] == '【' {
-		return lexer.makeToken(string(lexer.src[lexer.cursor]), OpenBracketTokenKind)
+		return lexer.makeToken(string(lexer.src[lexer.cursor]), OpenBracketTokenKind), nil
 	}
 	if lexer.src[lexer.cursor] == ']' || lexer.src[lexer.cursor] == '】' {
-		return lexer.makeToken(string(lexer.src[lexer.cursor]), CloseBracketTokenKind)
+		return lexer.makeToken(string(lexer.src[lexer.cursor]), CloseBracketTokenKind), nil
 	}
 	if lexer.src[lexer.cursor] == '{' || lexer.src[lexer.cursor] == '｛' {
-		return lexer.makeToken(string(lexer.src[lexer.cursor]), OpenBraceTokenKind)
+		return lexer.makeToken(string(lexer.src[lexer.cursor]), OpenBraceTokenKind), nil
 	}
 	if lexer.src[lexer.cursor] == '}' || lexer.src[lexer.cursor] == '｝' {
-		return lexer.makeToken(string(lexer.src[lexer.cursor]), CloseBraceTokenKind)
+		return lexer.makeToken(string(lexer.src[lexer.cursor]), CloseBraceTokenKind), nil
 	}
 	if lexer.src[lexer.cursor] == '.' || lexer.src[lexer.cursor] == '。' {
-		return lexer.makeToken(string(lexer.src[lexer.cursor]), PeriodTokenKind)
+		return lexer.makeToken(string(lexer.src[lexer.cursor]), PeriodTokenKind), nil
 	}
 	if lexer.src[lexer.cursor] == ':' || lexer.src[lexer.cursor] == '：' {
-		return lexer.makeToken(string(lexer.src[lexer.cursor]), ColonTokenKind)
+		return lexer.makeToken(string(lexer.src[lexer.cursor]), ColonTokenKind), nil
 	}
 	if lexer.src[lexer.cursor] == ';' || lexer.src[lexer.cursor] == '；' {
-		return lexer.makeToken(string(lexer.src[lexer.cursor]), SemicolonTokenKind)
+		return lexer.makeToken(string(lexer.src[lexer.cursor]), SemicolonTokenKind), nil
 	}
 	if lexer.src[lexer.cursor] == ',' || lexer.src[lexer.cursor] == '、' || lexer.src[lexer.cursor] == '，' {
-		return lexer.makeToken(string(lexer.src[lexer.cursor]), CommaTokenKind)
+		return lexer.makeToken(string(lexer.src[lexer.cursor]), CommaTokenKind), nil
 	}
 	if lexer.src[lexer.cursor] == '?' || lexer.src[lexer.cursor] == '？' {
-		return lexer.makeToken(string(lexer.src[lexer.cursor]), QuestionTokenKind)
+		return lexer.makeToken(string(lexer.src[lexer.cursor]), QuestionTokenKind), nil
 	}
 	return token{}, fmt.Errorf("no single char token found")
 }
@@ -171,22 +173,22 @@ func (lexer *gomiLexer) scanSingleCharToken() (token, error) {
 func (lexer *gomiLexer) scanArithBinOpToken() (token, error) {
 	ch := lexer.at()
 	if ch == '+' || ch == '＋' {
-		return lexer.makeToken(string(ch), BinOpTokenKind)
+		return lexer.makeToken(string(ch), BinOpTokenKind), nil
 	}
 	if ch == '-' {
-		return lexer.makeToken(string(ch), BinOpTokenKind)
+		return lexer.makeToken(string(ch), BinOpTokenKind), nil
 	}
 	if ch == '*' || ch == '＊' {
-		return lexer.makeToken(string(ch), BinOpTokenKind)
+		return lexer.makeToken(string(ch), BinOpTokenKind), nil
 	}
 	if ch == '/' || ch == '／' {
-		return lexer.makeToken(string(ch), BinOpTokenKind)
+		return lexer.makeToken(string(ch), BinOpTokenKind), nil
 	}
 	if ch == '%' || ch == '％' {
-		return lexer.makeToken(string(ch), BinOpTokenKind)
+		return lexer.makeToken(string(ch), BinOpTokenKind), nil
 	}
 	if ch == '^' || ch == '＾' {
-		return lexer.makeToken(string(ch), BinOpTokenKind)
+		return lexer.makeToken(string(ch), BinOpTokenKind), nil
 	}
 	return token{}, fmt.Errorf("no arithmetic binop token")
 }
@@ -196,10 +198,10 @@ func (lexer *gomiLexer) scanTwoCharCandidateToken(c1 rune, c2 rune, t1 tokenKind
 	if lexer.at() == c1 {
 		lexer.cursor++
 		if lexer.cursor < len(lexer.src) && lexer.at() == c2 {
-			return lexer.makeToken(value+string(lexer.at()), t1)
+			return lexer.makeToken(value+string(lexer.at()), t1), nil
 		}
 		lexer.cursor--
-		return lexer.makeToken(value, t2)
+		return lexer.makeToken(value, t2), nil
 	}
 	return token{}, fmt.Errorf("could not scan two char token")
 }
@@ -254,7 +256,7 @@ func (lexer *gomiLexer) scanStringToken() (token, error) {
 			value += string(lexer.at())
 			lexer.cursor++
 		}
-		return lexer.makeToken(value, StringTokenKind)
+		return lexer.makeToken(value, StringTokenKind), nil
 	}
 	return token{}, fmt.Errorf("no string token")
 }
@@ -263,22 +265,22 @@ func (lexer *gomiLexer) scanLogicalOpToken() (token, error) {
 	if lexer.at() == '|' {
 		lexer.cursor++
 		if lexer.at() == '|' {
-			return lexer.makeToken("||", BinOpTokenKind)
+			return lexer.makeToken("||", BinOpTokenKind), nil
 		}
 	} else if lexer.at() == '｜' {
 		lexer.cursor++
 		if lexer.at() == '｜' {
-			return lexer.makeToken("｜｜", BinOpTokenKind)
+			return lexer.makeToken("｜｜", BinOpTokenKind), nil
 		}
 	} else if lexer.at() == '&' {
 		lexer.cursor++
 		if lexer.at() == '&' {
-			return lexer.makeToken("&&", BinOpTokenKind)
+			return lexer.makeToken("&&", BinOpTokenKind), nil
 		}
 	} else if lexer.at() == '＆' {
 		lexer.cursor++
 		if lexer.at() == '＆' {
-			return lexer.makeToken("＆＆", BinOpTokenKind)
+			return lexer.makeToken("＆＆", BinOpTokenKind), nil
 		}
 	}
 	return token{}, fmt.Errorf("no logical binop token")
@@ -308,9 +310,9 @@ func (lexer *gomiLexer) scanNumericToken() (token, error) {
 		}
 		lexer.cursor--
 		if isFloat {
-			return lexer.makeToken(value, FloatTokenKind)
+			return lexer.makeToken(value, FloatTokenKind), nil
 		}
-		return lexer.makeToken(value, IntTokenKind)
+		return lexer.makeToken(value, IntTokenKind), nil
 	}
 	return token{}, fmt.Errorf("no numeric token")
 }
@@ -325,9 +327,9 @@ func (lexer *gomiLexer) scanIdentifierToken() (token, error) {
 		}
 		lexer.cursor--
 		if kind, has := reserved[value]; has {
-			return lexer.makeToken(value, kind)
+			return lexer.makeToken(value, kind), nil
 		}
-		return lexer.makeToken(value, IdentifierTokenKind)
+		return lexer.makeToken(value, IdentifierTokenKind), nil
 	}
 	return token{}, fmt.Errorf("no identifier token")
 }
@@ -336,15 +338,21 @@ func (lexer *gomiLexer) at() rune {
 	return lexer.src[lexer.cursor]
 }
 
-func (lexer *gomiLexer) ReadToken() (token, error) {
+func (lexer *gomiLexer) ReadToken() (token, *errors.Error) {
 	unrecognizedHit := false
 	for !unrecognizedHit {
 		lexer.eatSkippables()
 		if lexer.cursor > len(lexer.src) {
-			return token{}, fmt.Errorf("processed entire input")
+			return token{}, &errors.Error{
+				Op:     "frontend/ReadToken",
+				Line:   lexer.line,
+				Column: lexer.column,
+				Kind:   errors.EofError,
+				Err:    nil,
+			}
 		}
 		if lexer.cursor == len(lexer.src) {
-			return lexer.makeToken("EOF", EOFTokenKind)
+			return lexer.makeToken("EOF", EOFTokenKind), nil
 		}
 		if tok, err := lexer.scanSingleCharToken(); err == nil {
 			return tok, nil
@@ -375,10 +383,11 @@ func (lexer *gomiLexer) ReadToken() (token, error) {
 		}
 		unrecognizedHit = true
 	}
-	return token{}, fmt.Errorf(`
-		Lexer Error!
-		Unrecognized token: '%v'
-		Line: %v
-		Column: %v
-	`, string(lexer.src[lexer.cursor]), lexer.line, lexer.column)
+	return token{}, &errors.Error{
+		Op:     "frontend/ReadToken",
+		Line:   lexer.line,
+		Column: lexer.column,
+		Kind:   errors.UnrecognizedError,
+		Err:    nil,
+	}
 }
