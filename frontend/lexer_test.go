@@ -2,6 +2,8 @@ package frontend
 
 import (
 	"testing"
+
+	"github.com/david-allan-jones/gomi-go-parser/frontend/errors"
 )
 
 func testSources(t *testing.T, programs []string, kind tokenKind) {
@@ -167,9 +169,24 @@ func TestWhitespaceAtEndOfFile(t *testing.T) {
 
 func TestUnrecognizedChars(t *testing.T) {
 	lexer := MakeGomiLexer("$")
-	tok, err := lexer.ReadToken()
+	_, err := lexer.ReadToken()
 	if err == nil {
-		t.Fatalf("Expected $ to be unexpected but it was not. Token: %v", tok)
+		t.Fatalf("Expected error on unrecognized character but none was thrown")
+	}
+	if err.Kind != errors.UnrecognizedError {
+		t.Fatalf("Unrecognized char errored but it was of type %v", err.Kind)
+	}
+}
+
+func TestEofError(t *testing.T) {
+	lexer := MakeGomiLexer("")
+	lexer.ReadToken()
+	_, err := lexer.ReadToken()
+	if err == nil {
+		t.Fatalf("Expected error on unrecognized character but none was thrown")
+	}
+	if err.Kind != errors.EofError {
+		t.Fatalf("Unrecognized char errored but it was of type %v", err.Kind)
 	}
 }
 
