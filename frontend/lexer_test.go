@@ -10,7 +10,7 @@ func testSources(t *testing.T, programs []string, kind tokenKind) {
 	for i := 0; i < len(programs); i++ {
 		lexer := MakeGomiLexer(programs[i])
 		tok, _ := lexer.ReadToken()
-		if tok.Value == programs[i] {
+		if tok.Value != programs[i] {
 			t.Fatalf("Failed value test. Received %v but expected %v", tok.Value, programs[i])
 		}
 		if tok.Kind != kind {
